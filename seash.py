@@ -37,6 +37,8 @@ command input are now parsed according to the command dictionary. In addition,
 with a structured database of sorts for commands, it should now be easier to 
 implement new functions into seash as long as the correct format is followed in
 implementing new commands.
+
+TESTING TRAVIS CI <~>
 """
 
 
