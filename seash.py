@@ -57,30 +57,25 @@ warnings.simplefilter("default")
 # Needed for parsing user commands and executing command functions
 import seash_dictionary
 
-# Next, we import readline, which we use for command-line editing
-# within seash.
-
-# We need to expose the readline object file to OSX because the default object
-# file for Python 2.7 on OSX is not compatible with our tab completion module.
 import os
-import sys
 
 tabcompletion = True # By default, we should have tab completion on.
 
-# Readline imports.
+# Next, we import readline, which we use for command-line editing
+# within seash.
 try: # Try importing readline and then rlcompleter if that is successful.
-  try: # Try importing readline. Windows version first.
+  try: # Try importing packaged Windows version of readline first.
     import readline_windows as readline
   except ImportError:
     # Nope, not windows (presumably)
-    # Try whatever readline is immediately available
+    # Try whatever readline is immediately available in the environment.
     import readline
 
   # If we managed to import one or the other readline,
   # import standard rlcompleter module to provide tab completion
   # support for directories and files.
   import rlcompleter
-except ImportError: # We only get here if all imports of readline failed or import of rlcompleter failed
+except ImportError: # If all readline imports fail or rlcompleter import failed
   tabcompletion = False
 
 
@@ -130,18 +125,14 @@ def command_loop(test_command_list):
 
   # Set up the tab completion environment (Added by Danny Y. Huang)
   if tabcompletion:
-    # Initializes seash's tab completer
-    #completer = rlcompleter.Completer()
     readline.parse_and_bind("bind ^I rl_complete")
     readline.parse_and_bind("tab: complete")
     # Determines when a new tab complete instance should be initialized,
     # which, in this case, is never, so the tab completer will always take
     # the entire user's string into account
     readline.set_completer_delims("")
-    # Sets the completer function that readline will utilize
-    #readline.set_completer(completer.complete)
   else:
-    warnings.warn("Auto tab completion is off, because it is not available on your operating system.",ImportWarning)
+    warnings.warn("Auto tab completion is off, because it is not available on your operating system.", ImportWarning)
 
 
   # If passed a list of commands, do not prompt for user input
