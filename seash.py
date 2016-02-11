@@ -57,45 +57,29 @@ warnings.simplefilter("default")
 # Needed for parsing user commands and executing command functions
 import seash_dictionary
 
-# We need to expose the readline object file to OSX because the default object
-# file for Python 2.7 on OSX is not compatible with our tab completion module.
+
 import os
-import sys
 
-# Only rename if we're running on OSX
-rename_readline_so_file = sys.platform == 'darwin'
-HIDDEN_READLINE_SO_FN = 'readline.so.mac'
-EXPOSED_READLINE_SO_FN = 'readline.so'
-
-# Make sure we don't overwrite an existing readline.so if it exists.
-# We need to do this because os.rename() doesn't raise any errors
-# if the destination file already exists.
-if (rename_readline_so_file and 
-    EXPOSED_READLINE_SO_FN not in os.listdir('.')):
-  try:
-    os.rename(HIDDEN_READLINE_SO_FN, EXPOSED_READLINE_SO_FN)
-  except OSError:
-    # There was a problem reading readline.so.mac
-    rename_readline_so_file = False
-
+# By default, we should have tab completion on.
 tabcompletion = True
-try:
-  try:
-    # Required for windows tab-completion. 
-    # This is the readline module provided by pyreadline 1.7.1.
-    # http://pypi.python.org/pypi/pyreadline
+
+# Next, we import readline, which we use for command-line editing
+# within seash.
+try: # Try importing readline and then rlcompleter if that is successful.
+  try: # Try importing packaged Windows version of readline first.
     import readline_windows as readline
   except ImportError:
     # This error occurs when trying to import win_readline on mac/linux.
-    # We use the default readline module for mac/linux.
+    # We presume this is not windows and use the default readline module
+    # for mac/linux.
     import readline
+
+  # If we managed to import one or the other readline,
+  # import our tab_completer module to provide tab completion support for
+  # directories and files.
   import tab_completer
-except ImportError:
+except ImportError: # If all readline imports fail or tab_completer import failed
   tabcompletion = False
-  
-# Don't hide mac readline.so if we didn't expose it
-if rename_readline_so_file:
-  os.rename(EXPOSED_READLINE_SO_FN, HIDDEN_READLINE_SO_FN)
 
 # Used for re-enabling modules on the last run
 import seash_modules
@@ -146,6 +130,7 @@ def command_loop(test_command_list):
     # Initializes seash's tab completer
     completer = tab_completer.Completer()
     readline.parse_and_bind("tab: complete")
+    readline.parse_and_bind("bind ^I rl_complete")
     # Determines when a new tab complete instance should be initialized,
     # which, in this case, is never, so the tab completer will always take
     # the entire user's string into account
