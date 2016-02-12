@@ -129,14 +129,23 @@ def command_loop(test_command_list):
   if tabcompletion:
     # Initializes seash's tab completer
     completer = tab_completer.Completer()
-    readline.parse_and_bind("tab: complete")
-    readline.parse_and_bind("bind ^I rl_complete")
+    # Sets the completer function that readline will utilize
+    readline.set_completer(completer.complete)
+    # Instructs libedit/editline implementation to bind tab key to tab
+    # completion functionality.
+    # Currently conditioning this on readline library doc string,
+    # but will remove that when done debugging unusual behavior.
+    if 'libedit' in readline.__doc__:
+      readline.parse_and_bind("bind ^I rl_complete")
+    else:
+      # Instructs GNU readline implementation to bind tab key to tab completion
+      # functionality.
+      readline.parse_and_bind("tab: complete")
     # Determines when a new tab complete instance should be initialized,
     # which, in this case, is never, so the tab completer will always take
     # the entire user's string into account
     readline.set_completer_delims("")
-    # Sets the completer function that readline will utilize
-    readline.set_completer(completer.complete)
+    
   else:
     warnings.warn("Auto tab completion is off, because it is not available on your operating system.",ImportWarning)
 

@@ -35,12 +35,19 @@ import seash_dictionary
 import seash_global_variables
 import seash_modules
 
+# Import readline so that we can pull the full line buffer from it during
+# complete() if we need to correct some odd behavior on libedit/editline's
+# behalf.
+import readline
+
+
 class Completer:
   def __init__(self):
     self._prefix = None
     # Retrieves a copy of seash's command dictionary for reference
     self.commanddict = seash_dictionary.return_command_dictionary()
 
+    #print("Completer initialized!")
 
 
 
@@ -135,14 +142,17 @@ class Completer:
     # Determines if the last string the user inputted was incomplete
     incomplete_string = False
 
+    #print("Get all commands.")
+
 
     # Iterate through the input list to determine current path down the command dictionaries
     for commands in input_list:
       last_string = commands
 
+
+
       if commands in dict_iterator.keys():
         dict_iterator = dict_iterator[commands]['children']
-
 
       # Test the possibility of an user argument in the input list by first
       # seeing if the command exists as one of the child's of the current key,
@@ -221,9 +231,26 @@ class Completer:
 
 
 
-
   # The actual tab completion method
   def complete(self, prefix, index):
+
+    # Corrective measure for badly behaved libedit/editline stand-in for
+    # readline. Despite a [ readline.set_completer_delims("") ] directive,
+    # editline still feeds us a prefix that excludes any previous words on
+    # the same line (unlike readline, which respects the directive and gives
+    # us the whole line).
+    # So if we're dealing with editline, we grab the full line contents.
+    if 'libedit' in readline.__doc__:
+      full_current_line_buffer = readline.get_line_buffer()
+      #print("\n    Starting complete(). We're using libedit. Prefix: [" + prefix + "]. readline.get_line_buffer() yields: [" + full_current_line_buffer + "]")
+      if prefix in full_current_line_buffer and prefix != full_current_line_buffer:
+        #print("    Now resetting prefix to full line buffer.")
+        #input_list = full_current_line_buffer.split()
+        prefix = full_current_line_buffer
+    else:
+      #print("\n    Starting complete(). We're using GNU readline. Prefix: [" + prefix + "]. readline.get_line_buffer() yields: [" + full_current_line_buffer + "]")
+      pass
+
     # If the passed prefix is different than the previously passed prefix,
     # then a new list of possible completions needs to be constructed corresponding
     # to the new prefix
@@ -232,6 +259,9 @@ class Completer:
 
       # split the user input into a list of strings
       input_list = prefix.split()
+
+
+
       # Retrieves the list of children of the current command dictionary based on
       # the current input of the user
       self._words = self._get_all_commands(input_list)
@@ -246,9 +276,9 @@ class Completer:
 
       # updates prefix to determine when a new completion list needs to be made
       self._prefix = prefix
-    
 
     try:
+      #print("Matching words: " + str(self._matching_words[index]))
       return self._matching_words[index]
     except IndexError:
       return None
